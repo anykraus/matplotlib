@@ -128,73 +128,78 @@ def figure_edit(axes, parent=None):
         
         # re-generate legend, if checkbox is checked. Stefan Kraus/tacaswell 2014-04-22
         if generate_legend:
-            old_legend = axes.get_legend()
-            """try to set everything mentioned in http://matplotlib.org/api/legend_api.html:
-            class matplotlib.legend.Legend(parent, handles, labels, loc=None, numpoints=None,
-            markerscale=None, scatterpoints=None, scatteryoffsets=None, prop=None, fontsize=None,
-            borderpad=None, labelspacing=None, handlelength=None, handleheight=None,
-            handletextpad=None, borderaxespad=None, columnspacing=None, ncol=1,
-            mode=None, fancybox=None, shadow=None, title=None, framealpha=None,
-            bbox_to_anchor=None, bbox_transform=None, frameon=None, handler_map=None)
-            
-            fancybox needs special treatment
-            
-            framealpha needs still special treatment
-            
-            title needs special treatment as 'None' often is the title "text" of the old legend
-            """
-            h, l = axes.get_legend_handles_labels()
-            new_legend = axes.legend(h, l, loc=old_legend._loc,
-                                     numpoints=old_legend.numpoints,
-                                     markerscale=old_legend.markerscale,
-                                     scatterpoints=old_legend.scatterpoints,
-                                     scatteryoffsets=old_legend._scatteryoffsets,
-                                     prop=old_legend.prop,
-                                     fontsize=old_legend._fontsize,
-                                     borderpad=old_legend.borderpad,
-                                     labelspacing=old_legend.labelspacing,
-                                     handlelength=old_legend.handlelength,
-                                     handleheight=old_legend.handleheight,
-                                     handletextpad=old_legend.handletextpad,
-                                     borderaxespad=old_legend.borderaxespad,
-                                     columnspacing=old_legend.columnspacing,
-                                     ncol=old_legend._ncol,
-                                     mode=old_legend._mode,
-##                                   fancybox=old_legend._fancybox,
+            if axes.legend_ is not None:
+                old_legend = axes.get_legend()
+                """try to set everything mentioned in http://matplotlib.org/api/legend_api.html:
+                class matplotlib.legend.Legend(parent, handles, labels, loc=None, numpoints=None,
+                markerscale=None, scatterpoints=None, scatteryoffsets=None, prop=None, fontsize=None,
+                borderpad=None, labelspacing=None, handlelength=None, handleheight=None,
+                handletextpad=None, borderaxespad=None, columnspacing=None, ncol=1,
+                mode=None, fancybox=None, shadow=None, title=None, framealpha=None,
+                bbox_to_anchor=None, bbox_transform=None, frameon=None, handler_map=None)
+                
+                fancybox needs special treatment
+                
+                framealpha needs still special treatment
+                
+                title needs special treatment as 'None' often is the title "text" of the old legend
+                """
+                h, l = axes.get_legend_handles_labels()
+                new_legend = axes.legend(h, l, loc=old_legend._loc,
+                                         numpoints=old_legend.numpoints,
+                                         markerscale=old_legend.markerscale,
+                                         scatterpoints=old_legend.scatterpoints,
+                                         scatteryoffsets=old_legend._scatteryoffsets,
+                                         prop=old_legend.prop,
+                                         fontsize=old_legend._fontsize,
+                                         borderpad=old_legend.borderpad,
+                                         labelspacing=old_legend.labelspacing,
+                                         handlelength=old_legend.handlelength,
+                                         handleheight=old_legend.handleheight,
+                                         handletextpad=old_legend.handletextpad,
+                                         borderaxespad=old_legend.borderaxespad,
+                                         columnspacing=old_legend.columnspacing,
+                                         ncol=old_legend._ncol,
+                                         mode=old_legend._mode,
+##                                       fancybox=old_legend._fancybox,
 ##                """old_legend.legendPatch.set_boxstyle("round", pad=0, rounding_size=0.2)"""
-                                     shadow=old_legend.shadow,
+                                         shadow=old_legend.shadow,
                                      
-#                                     title=str(old_legend.get_title().get_text()),
-##                                   framealpha=old_legend._framealpha,
+#                                        title=str(old_legend.get_title().get_text()),
+##                                       framealpha=old_legend._framealpha,
 ##               """old_legend.get_frame().set_alpha(framealpha)"""
-##                                   bbox_to_anchor=old_legend._bbox_to_anchor,
+##                                       bbox_to_anchor=old_legend._bbox_to_anchor,
 ##                  """bbox_to_anchor=old_legend._bbox_to_anchor, lets the legend
 ##                  disappear"""
-##                                   bbox_transform=old_legend.bbox_transform,
+##                                       bbox_transform=old_legend.bbox_transform,
 ##                """see below"""
-                                     frameon=old_legend._drawFrame,
-                                     handler_map=old_legend._handler_map
-                                     )
-            #deal with fancybox:
-            new_legend.legendPatch = old_legend.legendPatch
-            new_legend.draggable(old_legend._draggable is not None)
-            # I don't like to test for strings! That's bad! why is it not
-            # None, but "None" as a string at all?!
-            # /Stefan Kraus 2014-04-22
-            if old_legend.get_title().get_text() != 'None':
-                new_legend.set_title(old_legend.get_title().get_text())
-                print('"None" is not the old title') #debug
-                new_legend.get_title().set_color(old_legend.get_title().get_color())
-                new_legend.get_title().set_horizontalalignment(old_legend.get_title().get_horizontalalignment())
-                new_legend.get_title().set_verticalalignment(old_legend.get_title().get_verticalalignment())
-                new_legend.get_title().set_position(old_legend.get_title().get_position())
-                new_legend.get_title().set_rotation_mode(old_legend.get_title().get_rotation_mode())
-    #            new_legend.get_title().set_window_extent(old_legend.get_title().get_window_extent()) # there is no set_window_extent
-    #            new_legend.get_title().set_backgroundcolor(old_legend.get_title().get_backgroundcolor()) # there is no get_backgroundcolor
-    #            new_legend.get_title().set_bbox(old_legend.get_title().get_bbox()) # there is no get_bbox
-                new_legend.get_title().set_x(old_legend.get_title().get_position()[0])
-                new_legend.get_title().set_y(old_legend.get_title().get_position()[1])
-                new_legend.get_title().set_fontproperties(old_legend.get_title().get_fontproperties())
+                                         frameon=old_legend._drawFrame,
+                                         handler_map=old_legend._handler_map
+                                         )
+                #deal with fancybox:
+                new_legend.legendPatch = old_legend.legendPatch
+                new_legend.draggable(old_legend._draggable is not None)
+                # I don't like to test for strings! That's bad! why is it not
+                # None, but "None" as a string at all?!
+                # /Stefan Kraus 2014-04-22
+                if old_legend.get_title().get_text() != 'None':
+                    new_legend.set_title(old_legend.get_title().get_text())
+                    print('"None" is not the old title') #debug
+                    new_legend.get_title().set_color(old_legend.get_title().get_color())
+                    new_legend.get_title().set_horizontalalignment(old_legend.get_title().get_horizontalalignment())
+                    new_legend.get_title().set_verticalalignment(old_legend.get_title().get_verticalalignment())
+                    new_legend.get_title().set_position(old_legend.get_title().get_position())
+                    new_legend.get_title().set_rotation_mode(old_legend.get_title().get_rotation_mode())
+    #               new_legend.get_title().set_window_extent(old_legend.get_title().get_window_extent()) # there is no set_window_extent
+    #               new_legend.get_title().set_backgroundcolor(old_legend.get_title().get_backgroundcolor()) # there is no get_backgroundcolor
+    #               new_legend.get_title().set_bbox(old_legend.get_title().get_bbox()) # there is no get_bbox
+                    new_legend.get_title().set_x(old_legend.get_title().get_position()[0])
+                    new_legend.get_title().set_y(old_legend.get_title().get_position()[1])
+                    new_legend.get_title().set_fontproperties(old_legend.get_title().get_fontproperties())
+            else:
+                new_legend = axes.legend()
+                new_legend.draggable(True)
+                
         # Redraw
         figure = axes.get_figure()
         figure.canvas.draw()
