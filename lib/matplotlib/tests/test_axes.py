@@ -14,6 +14,8 @@ import matplotlib
 from matplotlib.testing.decorators import image_comparison, cleanup
 import matplotlib.pyplot as plt
 from numpy.testing import assert_array_equal
+import warnings
+
 
 @image_comparison(baseline_images=['formatter_ticker_001',
                                    'formatter_ticker_002',
@@ -845,6 +847,111 @@ def test_markevery_line():
     ax.legend()
 
 
+@image_comparison(baseline_images=['markevery_linear_scales'],
+                  remove_text=True)
+def test_markevery_linear_scales():
+    cases = [None,
+         8,
+         (30, 8),
+         [16, 24, 30], [0,-1],
+         slice(100, 200, 3),
+         0.1, 0.3, 1.5,
+         (0.0, 0.1), (0.45, 0.1)]
+
+    cols = 3
+    gs = matplotlib.gridspec.GridSpec(len(cases) // cols + 1, cols)
+
+    delta = 0.11
+    x = np.linspace(0, 10 - 2 * delta, 200) + delta
+    y = np.sin(x) + 1.0 + delta
+
+    for i, case in enumerate(cases):
+        row = (i // cols)
+        col = i % cols
+        plt.subplot(gs[row, col])
+        plt.title('markevery=%s' % str(case))
+        plt.plot(x, y, 'o', ls='-', ms=4,  markevery=case)
+
+@image_comparison(baseline_images=['markevery_linear_scales_zoomed'],
+                  remove_text=True)
+def test_markevery_linear_scales_zoomed():
+    cases = [None,
+         8,
+         (30, 8),
+         [16, 24, 30], [0,-1],
+         slice(100, 200, 3),
+         0.1, 0.3, 1.5,
+         (0.0, 0.1), (0.45, 0.1)]
+
+    cols = 3
+    gs = matplotlib.gridspec.GridSpec(len(cases) // cols + 1, cols)
+
+    delta = 0.11
+    x = np.linspace(0, 10 - 2 * delta, 200) + delta
+    y = np.sin(x) + 1.0 + delta
+
+    for i, case in enumerate(cases):
+        row = (i // cols)
+        col = i % cols
+        plt.subplot(gs[row, col])
+        plt.title('markevery=%s' % str(case))
+        plt.plot(x, y, 'o', ls='-', ms=4,  markevery=case)
+        plt.xlim((6, 6.7))
+        plt.ylim((1.1, 1.7))
+
+
+@image_comparison(baseline_images=['markevery_log_scales'],
+                  remove_text=True)
+def test_markevery_log_scales():
+    cases = [None,
+         8,
+         (30, 8),
+         [16, 24, 30], [0,-1],
+         slice(100, 200, 3),
+         0.1, 0.3, 1.5,
+         (0.0, 0.1), (0.45, 0.1)]
+
+    cols = 3
+    gs = matplotlib.gridspec.GridSpec(len(cases) // cols + 1, cols)
+
+    delta = 0.11
+    x = np.linspace(0, 10 - 2 * delta, 200) + delta
+    y = np.sin(x) + 1.0 + delta
+
+    for i, case in enumerate(cases):
+        row = (i // cols)
+        col = i % cols
+        plt.subplot(gs[row, col])
+        plt.title('markevery=%s' % str(case))
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.plot(x, y, 'o', ls='-', ms=4,  markevery=case)
+
+@image_comparison(baseline_images=['markevery_polar'],
+                  remove_text=True)
+def test_markevery_polar():
+    cases = [None,
+         8,
+         (30, 8),
+         [16, 24, 30], [0,-1],
+         slice(100, 200, 3),
+         0.1, 0.3, 1.5,
+         (0.0, 0.1), (0.45, 0.1)]
+
+    cols = 3
+    gs = matplotlib.gridspec.GridSpec(len(cases) // cols + 1, cols)
+
+    r = np.linspace(0, 3.0, 200)
+    theta = 2 * np.pi * r
+
+    for i, case in enumerate(cases):
+        row = (i // cols)
+        col = i % cols
+        plt.subplot(gs[row, col], polar = True)
+        plt.title('markevery=%s' % str(case))
+        plt.plot(theta, r, 'o', ls='-', ms=4,  markevery=case)
+
+
 @image_comparison(baseline_images=['marker_edges'],
                   remove_text=True)
 def test_marker_edges():
@@ -1632,6 +1739,19 @@ def test_stem_args():
     ax.stem(x, y)
     ax.stem(x, y, 'r--')
     ax.stem(x, y, 'r--', basefmt='b--')
+
+
+@cleanup
+def test_stem_dates():
+    fig, ax = plt.subplots(1, 1)
+    from dateutil import parser
+    x = parser.parse("2013-9-28 11:00:00")
+    y = 100
+
+    x1 = parser.parse("2013-9-28 12:00:00")
+    y1 = 200
+
+    ax.stem([x, x1], [y, y1], "*-")
 
 
 @image_comparison(baseline_images=['hist_stacked_stepfilled_alpha'])
@@ -2988,6 +3108,17 @@ def test_pie_ccw_true():
             counterclock=True)
     # Set aspect ratio to be equal so that pie is drawn as a circle.
     plt.axis('equal')
+
+
+@cleanup
+def test_pathological_hexbin():
+    # issue #2863
+    with warnings.catch_warnings(record=True) as w:
+        mylist = [10] * 100
+        fig, ax = plt.subplots(1, 1)
+        ax.hexbin(mylist, mylist)
+        plt.show()
+        assert_equal(len(w), 0)
 
 
 if __name__ == '__main__':

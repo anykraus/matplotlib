@@ -46,7 +46,7 @@ New plotting features
 Power-law normalization
 ```````````````````````
 Ben Gamari added a power-law normalization method,
-:class:`~matplotlib.colors.PowerNorm`. This class maps a range of 
+:class:`~matplotlib.colors.PowerNorm`. This class maps a range of
 values to the interval [0,1] with power-law scaling with the exponent
 provided by the constructor's `gamma` argument. Power law normalization
 can be useful for, e.g., emphasizing small populations in a histogram.
@@ -166,6 +166,31 @@ Larry Bradley fixed the :func:`~matplotlib.pyplot.errorbar` method such
 that the upper and lower limits (*lolims*, *uplims*, *xlolims*,
 *xuplims*) now point in the correct direction.
 
+More consistent add-object API for Axes
+```````````````````````````````````````
+Added the Axes method :meth:`~matplotlib.axes.Axes.add_image` to put image
+handling on a par with artists, collections, containers, lines, patches,
+and tables.
+
+
+More `markevery` options to show only a subset of markers
+`````````````````````````````````````````````````````````
+Rohan Walker extended the `markevery` property in
+:class:`~matplotlib.lines.Line2D`.  You can now specify a subset of markers to
+show with an int, slice object, numpy fancy indexing, or float. Using a float
+shows markers at approximately equal display-coordinate-distances along the
+line.
+
+
+Fixed the mouse coordinates giving the wrong theta value in Polar graph
+```````````````````````````````````````````````````````````````````````
+Added code to
+:funct:`~matplotlib.InvertedPolarTransform.transform_non_affine`
+to ensure that the calculated theta value was between the range of 0 and 2 * pi
+since the problem was that the value can become negative after applying the
+direction and rotation to the theta calculation.
+
+
 Date handling
 -------------
 
@@ -225,6 +250,10 @@ vertically arranged now, buttons for tight layout and reset were
 added. Furthermore, the the subplottool is now implemented as a modal
 dialog. It was previously a QMainWindow, leaving the SPT open if one closed the
 plotwindow.
+
+In the figureoptions dialog one can now choose to (re-)generate a simple
+automatic legend. Any explicitly set legend entries will be lost, but changes to
+the curves' label, linestyle, et cetera will now be updated in the legend.
 
 Interactive performance of the Qt4 backend has been dramatically improved
 under windows.

@@ -1,7 +1,24 @@
+2014-05-16 Fixed the positioning of multi-line text in the PGF backend.
+
+2014-05-14 Added Axes.add_image() as the standard way to add AxesImage
+           instances to Axes. This improves the consistency with
+           add_artist(), add_collection(), add_container(), add_line(),
+           add_patch(), and add_table().
+
 2014-05-02 Added colorblind-friendly colormap, named 'Wistia'.
 
 2014-04-27 Improved input clean up in Axes.{h|v}lines
            Coerce input into a 1D ndarrays (after dealing with units).
+
+2014-04-27 removed un-needed cast to float in stem
+
+2014-04-23 Updated references to "ipython -pylab"
+           The preferred method for invoking pylab is now using the
+           "%pylab" magic.
+           -Chris G.
+
+2014-04-22 Added (re-)generate a simple automatic legend to "Figure Options"
+           dialog of the Qt4Agg backend.
 
 2014-04-22 Added an example showing the difference between
            interpolation = 'none' and interpolation = 'nearest' in
@@ -13,12 +30,25 @@
 2014-04-08 Fixed a bug in parasite_axes.py by making a list out
            of a generator at line 263.
 
+2014-02-25 In backend_qt4agg changed from using update -> repaint under
+	   windows.  See comment in source near `self._priv_update` for
+	   longer explaination.
+
 2014-03-27 Added tests for pie ccw parameter. Removed pdf and svg images
            from tests for pie linewidth parameter.
+
+2014-03-24 Changed the behaviour of axes to not ignore leading or trailing
+           patches of height 0 (or width 0) while calculating the x and y
+           axis limits. Patches having both height == 0 and width == 0 are
+           ignored.
 
 2014-03-24 Added bool kwarg (manage_xticks) to boxplot to enable/disable
            the managemnet of the xlimits and ticks when making a boxplot.
            Default in True which maintains current behavior by default.
+
+2014-03-23 Fixed a bug in projections/polar.py by making sure that the theta
+           value being calculated when given the mouse coordinates stays within
+           the range of 0 and 2 * pi.
 
 2014-03-22 Added the keyword arguments wedgeprops and textprops to pie.
            Users can control the wedge and text properties of the pie
@@ -30,8 +60,15 @@
 
 2014-03-13 Add parameter 'clockwise' to function pie, True by default.
 
+2014-02-28 Added 'origin' kwarg to `spy`
+
 2014-02-27 Implemented separate horizontal/vertical axes padding to the
-           ImageGrid in the AxesGrid toolkit
+	   ImageGrid in the AxesGrid toolkit
+
+2014-02-27 Allowed markevery property of matplotlib.lines.Line2D to be, an int
+           numpy fancy index, slice object, or float.  The float behaviour
+           turns on markers at approximately equal display-coordinate-distances
+           along the line.
 
 2014-02-25 In backend_qt4agg changed from using update -> repaint under
            windows.  See comment in source near `self._priv_update` for
