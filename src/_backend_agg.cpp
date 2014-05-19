@@ -166,7 +166,6 @@ BufferRegion::to_string_argb(const Py::Tuple &args)
         throw Py::TypeError("Could not create memory for blit");
     }
 
-    pix = begin;
     for (i = 0; i < (size_t)height; ++i)
     {
         pix = begin + i * stride;
@@ -2184,6 +2183,7 @@ RendererAgg::write_rgba(const Py::Tuple& args)
     }
     else
     {
+        PyErr_Clear();
         PyObject* write_method = PyObject_GetAttrString(py_fileobj.ptr(),
                                                         "write");
         if (!(write_method && PyCallable_Check(write_method)))
@@ -2193,7 +2193,11 @@ RendererAgg::write_rgba(const Py::Tuple& args)
                 "Object does not appear to be a 8-bit string path or a Python file-like object");
         }
 
+        #if PY3K
+        PyObject_CallFunction(write_method, (char *)"y#", pixBuffer, NUMBYTES);
+        #else
         PyObject_CallFunction(write_method, (char *)"s#", pixBuffer, NUMBYTES);
+        #endif
 
         Py_XDECREF(write_method);
     }

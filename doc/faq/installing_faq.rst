@@ -153,7 +153,7 @@ Then, if you want to update your matplotlib at any time, just do::
 
 When you run `git pull`, if the output shows that only Python files have been
 updated, you are all set. If C files have changed, you need to run the `python
-setupegg.py develop` command again to compile them.
+setup.py develop` command again to compile them.
 
 There is more information on :ref:`using git <using-git>` in
 the developer docs.
@@ -183,8 +183,8 @@ Which python for OS X?
 
 Apple ships with its own python, and many users have had trouble
 with it. There are several alternative versions of python that
-can be used. If it is feasible, we recommend that you use the enthought
-python distribution `EPD <http://www.enthought.com/products/epd.php>`_
+can be used. If it is feasible, we recommend that you use
+`Enthought Canopy <https://www.enthought.com/products/canopy/>`_
 for OS X (which comes with matplotlib and much more). Also available is
 `MacPython <http://wiki.python.org/moin/MacPython/Leopard>`_ or the
 official OS X version from `python.org <http://www.python.org/download/>`_.
@@ -313,7 +313,6 @@ scipy, vtk and user interface toolkits.  These packages are quite
 large because they come with so much, but you get everything with
 a single click installer.
 
-* The Enthought Python Distribution `EPD
-  <http://www.enthought.com/products/epd.php>`_
+* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_
 
 * `python (x, y) <http://www.pythonxy.com>`_
