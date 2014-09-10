@@ -450,14 +450,15 @@ class OptionalPackage(SetupPackage):
     force = False
     config_category = "packages"
 
-    def get_config(self):
+    @classmethod
+    def get_config(cls):
         """
         Look at `setup.cfg` and return one of ["auto", True, False] indicating
         if the package is at default state ("auto"), forced by the user (True)
         or opted-out (False).
         """
         try:
-            return config.getboolean(self.config_category, self.name)
+            return config.getboolean(cls.config_category, cls.name)
         except:
             return "auto"
 
@@ -545,7 +546,7 @@ class Matplotlib(SetupPackage):
         return [
             'matplotlib',
             'matplotlib.backends',
-            'matplotlib.backends.qt4_editor',
+            'matplotlib.backends.qt_editor',
             'matplotlib.compat',
             'matplotlib.projections',
             'matplotlib.axes',
@@ -584,7 +585,7 @@ class Matplotlib(SetupPackage):
                 'backends/web_backend/jquery/css/themes/base/images/*',
                 'backends/web_backend/css/*.*',
                 'backends/Matplotlib.nib/*',
-                'style/stylelib/*.mplstyle',
+                'mpl-data/stylelib/*.mplstyle',
              ]}
 
 
@@ -680,6 +681,38 @@ class Tests(OptionalPackage):
         if not sys.version_info >= (3, 3):
             requires += ['mock']
         return requires
+
+class Toolkits_Tests(Tests):
+    name = "toolkits_tests"
+
+    def check_requirements(self):
+        conf = self.get_config()
+        toolkits_conf = Toolkits.get_config()
+        tests_conf = Tests.get_config()
+
+        if conf is True:
+            Tests.force = True
+            Toolkits.force = True
+        elif conf == "auto" and not (toolkits_conf and tests_conf):
+            # Only auto-install if both toolkits and tests are set
+            # to be installed
+            raise CheckFailed("toolkits_tests needs 'toolkits' and 'tests'")
+        return ""
+
+    def get_packages(self):
+        return [
+            'mpl_toolkits.tests',
+            ]
+
+    def get_package_data(self):
+        baseline_images = [
+            'tests/baseline_images/%s/*' % x
+            for x in os.listdir('lib/mpl_toolkits/tests/baseline_images')]
+
+        return {'mpl_toolkits': baseline_images}
+
+    def get_namespace_packages(self):
+        return ['mpl_toolkits']
 
 
 class DelayedExtension(Extension, object):
@@ -785,10 +818,10 @@ class Numpy(SetupPackage):
         ext.add_hook('include_dirs', self.include_dirs_hook)
 
     def get_setup_requires(self):
-        return ['numpy>=1.5']
+        return ['numpy>=1.6']
 
     def get_install_requires(self):
-        return ['numpy>=1.5']
+        return ['numpy>=1.6']
 
 
 class CXX(SetupPackage):
@@ -896,15 +929,42 @@ class FreeType(SetupPackage):
         if sys.platform == 'win32':
             return "Unknown version"
 
-        status, output = getstatusoutput("freetype-config --version")
+        status, output = getstatusoutput("freetype-config --ftversion")
         if status == 0:
             version = output
         else:
             version = None
 
+        # Early versions of freetype grep badly inside freetype-config,
+        # so catch those cases. (tested with 2.5.3).
+        if version is None or 'No such file or directory\ngrep:' in version:
+            version = self.version_from_header()
+
         return self._check_for_pkg_config(
             'freetype2', 'ft2build.h',
-            min_version='2.4', version=version)
+            min_version='2.3', version=version)
+
+    def version_from_header(self):
+        version = 'Failed to identify version.'
+        ext = self.get_extension()
+        if ext is None:
+            return version
+        # Return the first version found in the include dirs.
+        for include_dir in ext.include_dirs:
+            header_fname = os.path.join(include_dir, 'freetype.h')
+            if os.path.exists(header_fname):
+                major, minor, patch = 0, 0, 0
+                with open(header_fname, 'r') as fh:
+                    for line in fh:
+                        if line.startswith('#define FREETYPE_'):
+                            value = line.rsplit(' ', 1)[1].strip()
+                            if 'MAJOR' in line:
+                                major = value
+                            elif 'MINOR' in line:
+                                minor = value
+                            else:
+                                patch = value
+                return '.'.join([major, minor, patch])
 
     def add_flags(self, ext):
         pkg_config.setup_extension(
@@ -917,6 +977,12 @@ class FreeType(SetupPackage):
             default_libraries=['freetype', 'z'],
             alt_exec='freetype-config')
 
+    def get_extension(self):
+        if sys.platform == 'win32':
+            return None
+        ext = make_extension('freetype2', [])
+        self.add_flags(ext)
+        return ext
 
 class FT2Font(SetupPackage):
     name = 'ft2font'
@@ -937,13 +1003,22 @@ class Png(SetupPackage):
     name = "png"
 
     def check(self):
+        status, output = getstatusoutput("libpng-config --version")
+        if status == 0:
+            version = output
+        else:
+            version = None
+
         try:
             return self._check_for_pkg_config(
                 'libpng', 'png.h',
-                min_version='1.2')
+                min_version='1.2', version=version)
         except CheckFailed as e:
-            self.__class__.found_external = False
-            return str(e) + ' Using unknown version.'
+            include_dirs = [
+                os.path.join(dir, 'include') for dir in get_base_dirs()]
+            if has_include_file(include_dirs, 'png.h'):
+                return str(e) + ' Using unknown version found on system.'
+            raise
 
     def get_extension(self):
         sources = [
@@ -951,7 +1026,8 @@ class Png(SetupPackage):
             ]
         ext = make_extension('matplotlib._png', sources)
         pkg_config.setup_extension(
-            ext, 'libpng', default_libraries=['png', 'z'])
+            ext, 'libpng', default_libraries=['png', 'z'],
+            alt_exec='libpng-config --ldflags')
         Numpy().add_flags(ext)
         CXX().add_flags(ext)
         return ext
@@ -1142,7 +1218,7 @@ class Dateutil(SetupPackage):
         return [dateutil]
 
 
-class Tornado(SetupPackage):
+class Tornado(OptionalPackage):
     name = "tornado"
 
     def check(self):
@@ -1155,9 +1231,6 @@ class Tornado(SetupPackage):
                 "after matplotlib.")
 
         return "using tornado version %s" % tornado.version
-
-    def get_install_requires(self):
-        return ['tornado']
 
 
 class Pyparsing(SetupPackage):
@@ -1675,9 +1748,6 @@ class BackendGtk3Agg(OptionalBackendPackage):
         if 'TRAVIS' in os.environ:
             raise CheckFailed("Can't build with Travis")
 
-        if PY3:
-            raise CheckFailed("gtk3agg backend does not work on Python 3")
-
         # This check needs to be performed out-of-process, because
         # importing gi and then importing regular old pygtk afterward
         # segfaults the interpreter.
@@ -1852,8 +1922,7 @@ class Windowing(OptionalBackendPackage):
         return ext
 
 
-class BackendQt4(OptionalBackendPackage):
-    name = "qt4agg"
+class BackendQtBase(OptionalBackendPackage):
 
     def convert_qt_version(self, version):
         version = '%x' % version
@@ -1864,37 +1933,108 @@ class BackendQt4(OptionalBackendPackage):
         return '.'.join(temp)
 
     def check_requirements(self):
+        '''
+        If PyQt4/PyQt5 is already imported, importing PyQt5/PyQt4 will fail
+        so we need to test in a subprocess (as for Gtk3).
+        '''
         try:
-            from PyQt4 import QtCore
-        except ImportError:
-            raise CheckFailed("PyQt4 not found")
-        # Import may still be broken for our python
-        try:
-            qt_version = QtCore.QT_VERSION
-            pyqt_version_str = QtCore.PYQT_VERSION_STR
-        except AttributeError:
-            raise CheckFailed('PyQt4 not correctly imported')
+            p = multiprocessing.Pool()
+
+        except:
+            # Can't do multiprocessing, fall back to normal approach ( this will fail if importing both PyQt4 and PyQt5 )
+            try:
+                # Try in-process
+                msg = self.callback(self)
+
+            except RuntimeError:
+                raise CheckFailed("Could not import: are PyQt4 & PyQt5 both installed?")
+
+            except:
+                # Raise any other exceptions
+                raise
+
+        else:
+            # Multiprocessing OK
+            try:
+                msg = p.map(self.callback, [self])[0]
+            except:
+                # If we hit an error on multiprocessing raise it
+                raise
+            finally:
+                # Tidy up multiprocessing
+                p.close()
+                p.join()
+
+        return msg
+
+
+def backend_qt4_internal_check(self):
+    try:
+        from PyQt4 import QtCore
+    except ImportError:
+        raise CheckFailed("PyQt4 not found")
+
+    try:
+        qt_version = QtCore.QT_VERSION
+        pyqt_version_str = QtCore.QT_VERSION_STR
+    except AttributeError:
+        raise CheckFailed('PyQt4 not correctly imported')
+    else:
         BackendAgg.force = True
-        return ("Qt: %s, PyQt4: %s" %
-                (self.convert_qt_version(
-                    qt_version),
-                    pyqt_version_str))
+        return ("Qt: %s, PyQt: %s" % (self.convert_qt_version(qt_version), pyqt_version_str))
 
 
-class BackendPySide(OptionalBackendPackage):
+class BackendQt4(BackendQtBase):
+    name = "qt4agg"
+
+    def __init__(self, *args, **kwargs):
+        BackendQtBase.__init__(self, *args, **kwargs)
+        self.callback = backend_qt4_internal_check
+
+
+def backend_qt5_internal_check(self):
+    try:
+        from PyQt5 import QtCore
+    except ImportError:
+        raise CheckFailed("PyQt5 not found")
+
+    try:
+        qt_version = QtCore.QT_VERSION
+        pyqt_version_str = QtCore.QT_VERSION_STR
+    except AttributeError:
+        raise CheckFailed('PyQt5 not correctly imported')
+    else:
+        BackendAgg.force = True
+        return ("Qt: %s, PyQt: %s" % (self.convert_qt_version(qt_version), pyqt_version_str))
+
+
+class BackendQt5(BackendQtBase):
+    name = "qt5agg"
+
+    def __init__(self, *args, **kwargs):
+        BackendQtBase.__init__(self, *args, **kwargs)
+        self.callback = backend_qt5_internal_check
+
+
+def backend_pyside_internal_check(self):
+    try:
+        from PySide import __version__
+        from PySide import QtCore
+    except ImportError:
+        raise CheckFailed("PySide not found")
+    else:
+        BackendAgg.force = True
+        return ("Qt: %s, PySide: %s" %
+                (QtCore.__version__, __version__))
+
+
+class BackendPySide(BackendQtBase):
     name = "pyside"
 
-    def check_requirements(self):
-        try:
-            from PySide import __version__
-            from PySide import QtCore
-        except ImportError:
-            raise CheckFailed("PySide not found")
-        else:
-            BackendAgg.force = True
+    def __init__(self, *args, **kwargs):
+        BackendQtBase.__init__(self, *args, **kwargs)
+        self.callback = backend_pyside_internal_check
 
-            return ("Qt: %s, PySide: %s" %
-                    (QtCore.__version__, __version__))
 
 
 class BackendCairo(OptionalBackendPackage):
