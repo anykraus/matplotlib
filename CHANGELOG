@@ -1,3 +1,20 @@
+2014-06-10 Added Colorbar.remove()
+
+2014-06-07 Fixed bug so radial plots can be saved as ps in py3k.
+
+2014-06-01 Changed the fmt kwarg of errorbar to support the
+           the mpl convention that "none" means "don't draw it",
+           and to default to the empty string, so that plotting
+           of data points is done with the plot() function
+           defaults.  Deprecated use of the None object in place
+           "none".
+
+2014-05-22 Allow the linscale keyword parameter of symlog scale to be
+           smaller than one.
+
+2014-05-20 Added logic to in FontManager to invalidate font-cache if
+           if font-family rcparams have changed.
+
 2014-05-16 Fixed the positioning of multi-line text in the PGF backend.
 
 2014-05-14 Added Axes.add_image() as the standard way to add AxesImage
@@ -24,15 +41,22 @@
            interpolation = 'none' and interpolation = 'nearest' in
            `imshow()` when saving vector graphics files.
 
+2014-04-22 Added violin plotting functions. See `Axes.violinplot`,
+           `Axes.violin`, `cbook.violin_stats` and `mlab.GaussianKDE` for
+           details.
+
 2014-04-10 Fixed the triangular marker rendering error. The "Up" triangle was
            rendered instead of "Right" triangle and vice-versa.
 
 2014-04-08 Fixed a bug in parasite_axes.py by making a list out
            of a generator at line 263.
 
+2014-04-02 Added `clipon=False` to patch creation of wedges and shadows
+	   in `pie`.
+
 2014-02-25 In backend_qt4agg changed from using update -> repaint under
-	   windows.  See comment in source near `self._priv_update` for
-	   longer explaination.
+           windows.  See comment in source near `self._priv_update` for
+           longer explaination.
 
 2014-03-27 Added tests for pie ccw parameter. Removed pdf and svg images
            from tests for pie linewidth parameter.
@@ -63,7 +87,7 @@
 2014-02-28 Added 'origin' kwarg to `spy`
 
 2014-02-27 Implemented separate horizontal/vertical axes padding to the
-	   ImageGrid in the AxesGrid toolkit
+           ImageGrid in the AxesGrid toolkit
 
 2014-02-27 Allowed markevery property of matplotlib.lines.Line2D to be, an int
            numpy fancy index, slice object, or float.  The float behaviour
